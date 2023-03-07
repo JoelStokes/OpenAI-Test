@@ -1,11 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using OpenAI;
 using Newtonsoft.Json;
 using TMPro;
+using System.Net.Http;
 
-public class OpenAITest : MonoBehaviour
+public class GPT3 : MonoBehaviour
 {
     public GameObject LoadingText;
     public GameObject StartUI;
@@ -40,14 +40,25 @@ public class OpenAITest : MonoBehaviour
     }
 
     public async void SetOpenAI(){
-        var api = new OpenAIClient();
-        var model = await api.ModelsEndpoint.GetModelDetailsAsync("gpt-3.5-turbo");
+        const string key = "YOUR API KEY";
+        const string url = "https://api.openai.com/v1/chat/completions";
 
-        var result = await api.CompletionsEndpoint.CreateCompletionAsync("Create an outline for an essay about " + TextEntry.text + " without an introduction or conclusion:", 
-            maxTokens: 130, 
-            temperature: 0.3, 
-            frequencyPenalty: 0.1,
-            model: model);
+        var request = new
+        {
+            model = "gpt-3.5-turbo",
+            prompt = "Create an outline for an essay about " + TextEntry.text + " without an introduction or conclusion:",
+            max_tokens = 130,
+            temperature = 0.3,
+            n = 1,
+
+        };
+    
+        var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {key}");
+        var requestJson = JsonConvert.SerializeObject(request);
+        var requestContent = new StringContent(requestJson, System.Text.Encoding.UTF8, "application/json");
+        var httpResponseMessage = await httpClient.PostAsync(url, requestContent);
+        var jsonString = await httpResponseMessage.Content.ReadAsStringAsync();
 
         returnedData = result.ToString();
 
